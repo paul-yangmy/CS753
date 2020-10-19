@@ -17,19 +17,6 @@ df = df.sort_values(axis=0, ascending=True, by="FromNodeId")  # sort
 # for i in set(df.FromNodeId):
 #     dictionary[i] = df[df.FromNodeId == i].ToNodeId.values.tolist()
 
-# use sparse matrix to store transition matrix
-# count = 0
-# data = np.zeros(len(df))
-# for i in range(len(df)):
-#     if i == 0:
-#         count += 1
-#     elif df.FromNodeId[i] == df.FromNodeId[i - 1]:
-#         count += 1
-#     else:
-#         data[i - count: i] = 1 / count
-#         count = 1
-#     if i == len(df) - 1:
-#         data[i + 1 - count: i] = 1 / count
 fromNodeId = df.FromNodeId.tolist()
 toNodeId = df.ToNodeId.tolist()
 d_value = []
@@ -169,17 +156,18 @@ def redistributePageRank(mat, vector, n):
     beta = 0.9
     num = 1
     while True:
-        leakedScore = 1 - sum(vector)
-        vecNew = beta * (mat * vector) + leakedScore / n
+        vecNew = beta * (mat * vector)
+        leakedScore = 1 - sum(vecNew)  # add L back to each iterations
+        vecNew += leakedScore / n
         if sum(abs(vecNew - vector)) < 0.02:
             break
         vector = vecNew
         num += 1
-    return vecNew, num, 1 - sum(vecNew)
+    return vecNew, num
 
 
 start4 = time.time()
-rankVec4, stopNum4, leakedScore = redistributePageRank(matrix, vec, nodes)
+rankVec4, stopNum4 = redistributePageRank(matrix, vec, nodes)
 end4 = time.time()
 print("")
 print('The running time of redistributing the leaked PageRank: is %fs' % (end4 - start4))
@@ -194,4 +182,4 @@ for i in range(10):
     print("NodeID:%-6i, PageRank:%f" % (result4[i, 0], result4[i, 1]))
 print("")
 # justify by adding L back to the pagerank equation
-# print(sum(rankVec4) + leakedScore)
+print(sum(rankVec4))
